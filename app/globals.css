@@ -53,6 +53,24 @@ body {
   }
 }
 
+/* Native <select> dropdown popups are rendered by the OS/browser with a
+   white background, independent of our dark theme. The trigger's light
+   foreground color otherwise gets inherited by <option> elements too,
+   producing pale, hard-to-read text on that white popup. Force readable,
+   high-contrast colors on the options themselves so every dropdown across
+   the app (Hiring Grade, Business Unit, etc.) stays legible. */
+select option {
+  color: #0b1220;
+  background-color: #ffffff;
+}
+
+select option:checked,
+select option:hover,
+select option:focus {
+  color: #ffffff;
+  background-color: #01adff;
+}
+
 .hexagon-clip {
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }

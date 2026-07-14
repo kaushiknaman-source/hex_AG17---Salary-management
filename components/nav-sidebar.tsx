@@ -48,7 +48,7 @@ export function NavSidebar() {
         </div>
         {!collapsed && (
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-[13px] font-semibold tracking-tight text-white">Hexagon_AG17</p>
+            <p className="truncate text-[16px] font-bold tracking-tight text-white">Hexagon_AG17</p>
             <p className="truncate text-[10.5px] text-white/40">Compensation &amp; Benefits</p>
           </div>
         )}
