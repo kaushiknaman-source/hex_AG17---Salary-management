@@ -131,9 +131,9 @@ export default function SalaryPage() {
             Build the candidate&rsquo;s offer
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Nothing here is mandatory. Enter what the candidate has disclosed — their current CTC
-            and, if available, its breakup — and the AI will handle classification and the offer
-            structure from there.
+            The candidate&rsquo;s current CTC is required — that&rsquo;s what an HR-standard
+            offer gets built from. Everything else, including a component-level breakup, is
+            optional.
           </p>
         </div>
 
@@ -174,6 +174,31 @@ export default function SalaryPage() {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
+              <Card className="border-sky/25">
+                <CardContent className="p-6">
+                  <h2 className="font-semibold">Candidate&rsquo;s current CTC</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Required. This is the number every HR decision downstream is anchored to — the
+                    offer, the hike, and whether it clears policy.
+                  </p>
+                  <div className="mt-4 max-w-xs">
+                    <Label>Current CTC (₹ / annum)</Label>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      className="mt-1.5 text-lg font-semibold"
+                      value={employee.currentCTC ?? ""}
+                      onChange={(e) =>
+                        setEmployee({
+                          currentCTC: e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                      placeholder="As disclosed by the candidate"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardContent className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
                   <Field label="Employee name">
@@ -218,19 +243,6 @@ export default function SalaryPage() {
                       value={employee.currentCompany}
                       onChange={(e) => setEmployee({ currentCompany: e.target.value })}
                       placeholder="Optional"
-                    />
-                  </Field>
-                  <Field label="Candidate's current CTC (₹ / annum)">
-                    <Input
-                      type="number"
-                      inputMode="decimal"
-                      value={employee.currentCTC ?? ""}
-                      onChange={(e) =>
-                        setEmployee({
-                          currentCTC: e.target.value === "" ? null : Number(e.target.value),
-                        })
-                      }
-                      placeholder="As disclosed by the candidate"
                     />
                   </Field>
                 </CardContent>
@@ -290,8 +302,13 @@ export default function SalaryPage() {
                 />
               </div>
 
-              <div className="flex justify-end">
-                <Button size="lg" onClick={() => goToStep(1)}>
+              <div className="flex items-center justify-end gap-3">
+                {!employee.currentCTC && (
+                  <p className="text-xs text-muted-foreground">
+                    Enter the candidate&rsquo;s current CTC to continue
+                  </p>
+                )}
+                <Button size="lg" onClick={() => goToStep(1)} disabled={!employee.currentCTC}>
                   Analyse with AI <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -370,7 +387,8 @@ export default function SalaryPage() {
                 <CardContent className="p-6">
                   <h2 className="font-semibold">Offered Fixed CTC</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    This becomes the foundation for the candidate&rsquo;s new offer.
+                    Candidate&rsquo;s current CTC is {formatINR(employee.currentCTC ?? 0)}. Pick a
+                    standard hike band or enter the offered figure directly.
                   </p>
                   <div className="mt-4 max-w-xs">
                     <Label>Target Fixed CTC (₹ / annum)</Label>
@@ -386,15 +404,26 @@ export default function SalaryPage() {
                     />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {[1800000, 2400000, 3000000].map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setTargetCTC(v)}
-                        className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-medium text-muted-foreground hover:border-sky/40 hover:text-sky"
-                      >
-                        {formatINR(v, { compact: true })}
-                      </button>
-                    ))}
+                    {[15, 20, 25, 30].map((hikePct) => {
+                      const suggested = employee.currentCTC
+                        ? Math.round((employee.currentCTC * (1 + hikePct / 100)) / 1000) * 1000
+                        : null;
+                      const active = suggested != null && targetCTC === suggested;
+                      return (
+                        <button
+                          key={hikePct}
+                          onClick={() => suggested != null && setTargetCTC(suggested)}
+                          disabled={suggested == null}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-30 ${
+                            active
+                              ? "border-sky/50 bg-sky/[0.1] text-sky"
+                              : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-sky/40 hover:text-sky"
+                          }`}
+                        >
+                          +{hikePct}% &middot; {suggested != null ? formatINR(suggested, { compact: true }) : "—"}
+                        </button>
+                      );
+                    })}
                   </div>
                   {employee.currentCTC && targetCTC ? (
                     <p className="mt-4 text-sm">

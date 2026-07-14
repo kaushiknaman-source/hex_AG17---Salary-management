@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 {[
                   {
                     title: "Capture the candidate's current CTC",
-                    body: "Log their current CTC as disclosed, plus a full breakup if you have it. Every field is optional and freely editable.",
+                    body: "The one required number — everything downstream, including the suggested hike bands, is anchored to it. A full breakup, if available, is optional.",
                   },
                   {
                     title: "Let the AI classify each component",
