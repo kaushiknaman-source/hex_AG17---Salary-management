@@ -44,7 +44,7 @@ export function NavSidebar() {
     >
       <div className={cn("flex h-14 items-center gap-2.5 border-b border-white/[0.06]", collapsed ? "justify-center px-0" : "px-5")}>
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5 ring-1 ring-sky/25">
-          <HexagonMark className="h-4 w-4 text-sky" />
+          <HexagonMark className="h-4 w-4" />
         </div>
         {!collapsed && (
           <div className="min-w-0 leading-tight">

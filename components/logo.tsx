@@ -1,52 +1,43 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
- * Reconstruction of the Hexagon folded-plane mark, rendered in white per
- * brand requirement for dark-surface / internal application usage.
- * Geometry: three triangular facets folding into a hexagonal silhouette,
- * matching the proportions of the official Hexagon icon.
+ * Official Hexagon icon mark (white), supplied directly by Hexagon brand
+ * assets — public/hexagon-icon-white.png. This replaces an earlier
+ * hand-drawn approximation; use this component wherever the mark appears.
+ * It's a fixed-white raster, so it should only be placed on dark or
+ * sufficiently colorful surfaces (which is every surface it's used on here).
  */
 export function HexagonMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn("h-8 w-8", className)}
-    >
-      <path
-        d="M35 6 L11 32 L35 88 L35 46 L11 32"
-        stroke="currentColor"
-        strokeWidth="5.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
+    <span className={cn("relative inline-block h-8 w-8", className)}>
+      <Image
+        src="/hexagon-icon-white.png"
+        alt="Hexagon"
+        fill
+        sizes="32px"
+        className="object-contain"
+        priority
       />
-      <path
-        d="M35 46 L79 26 L79 64 L35 88 L79 64"
-        stroke="currentColor"
-        strokeWidth="5.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
+    </span>
   );
 }
 
-export function HexagonLogo({
-  className,
-  wordmark = true,
-  markClassName,
-}: {
-  className?: string;
-  wordmark?: boolean;
-  markClassName?: string;
-}) {
+/**
+ * Official full Hexagon logo lockup (icon + wordmark, white) — supplied
+ * directly by Hexagon brand assets, public/hexagon-logo-white.png.
+ */
+export function HexagonLogo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center gap-2.5 text-white", className)}>
-      <HexagonMark className={cn("h-7 w-7", markClassName)} />
-      {wordmark && (
-        <span className="text-lg font-bold tracking-tight">HEXAGON</span>
-      )}
-    </div>
+    <span className={cn("relative inline-block h-8 w-[90px]", className)}>
+      <Image
+        src="/hexagon-logo-white.png"
+        alt="Hexagon"
+        fill
+        sizes="200px"
+        className="object-contain object-left"
+        priority
+      />
+    </span>
   );
 }
