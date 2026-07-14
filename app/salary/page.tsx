@@ -128,11 +128,12 @@ export default function SalaryPage() {
             Salary Structuring
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight lg:text-3xl">
-            Build the current compensation picture
+            Build the candidate&rsquo;s offer
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Nothing here is mandatory. Fill in whatever you know — the AI will classify each
-            component and the engine will handle the rest.
+            Nothing here is mandatory. Enter what the candidate has disclosed — their current CTC
+            and, if available, its breakup — and the AI will handle classification and the offer
+            structure from there.
           </p>
         </div>
 
@@ -219,6 +220,19 @@ export default function SalaryPage() {
                       placeholder="Optional"
                     />
                   </Field>
+                  <Field label="Candidate's current CTC (₹ / annum)">
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      value={employee.currentCTC ?? ""}
+                      onChange={(e) =>
+                        setEmployee({
+                          currentCTC: e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                      placeholder="As disclosed by the candidate"
+                    />
+                  </Field>
                 </CardContent>
               </Card>
 
@@ -226,9 +240,10 @@ export default function SalaryPage() {
                 <CardContent className="p-6">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
-                      <h2 className="font-semibold">Salary components</h2>
+                      <h2 className="font-semibold">Current CTC breakup (optional)</h2>
                       <p className="text-xs text-muted-foreground">
-                        Delete, rename, or reorder anything. Add unlimited custom components.
+                        Only if the candidate has shared it. Delete, rename, or reorder anything —
+                        add unlimited custom components.
                       </p>
                     </div>
                     <Badge variant="default">Total (annual): {formatINR(total)}</Badge>
@@ -353,9 +368,9 @@ export default function SalaryPage() {
             >
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="font-semibold">Target Fixed CTC</h2>
+                  <h2 className="font-semibold">Offered Fixed CTC</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    This becomes the foundation for the proposed salary structure.
+                    This becomes the foundation for the candidate&rsquo;s new offer.
                   </p>
                   <div className="mt-4 max-w-xs">
                     <Label>Target Fixed CTC (₹ / annum)</Label>
@@ -381,6 +396,16 @@ export default function SalaryPage() {
                       </button>
                     ))}
                   </div>
+                  {employee.currentCTC && targetCTC ? (
+                    <p className="mt-4 text-sm">
+                      <span className="text-muted-foreground">Hike over current CTC of </span>
+                      <span className="font-medium">{formatINR(employee.currentCTC)}</span>
+                      <span className="text-muted-foreground">: </span>
+                      <span className="font-semibold text-sky">
+                        {(((targetCTC - employee.currentCTC) / employee.currentCTC) * 100).toFixed(1)}%
+                      </span>
+                    </p>
+                  ) : null}
                 </CardContent>
               </Card>
 
@@ -437,7 +462,7 @@ export default function SalaryPage() {
                   onClick={handleGenerate}
                   disabled={!targetCTC || selectedCompanies.length === 0}
                 >
-                  Generate Proposed Structures <ArrowRight className="h-4 w-4" />
+                  Generate Offer Structure <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </motion.div>

@@ -31,7 +31,7 @@ export function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Card className="group relative overflow-hidden p-6 transition-all hover:border-white/20">
+      <Card className="p-6 transition-all hover:border-white/20">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -44,7 +44,6 @@ export function KpiCard({
             <Icon className="h-5 w-5" />
           </div>
         </div>
-        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br from-white/[0.03] to-transparent blur-2xl transition-opacity group-hover:opacity-80" />
       </Card>
     </motion.div>
   );

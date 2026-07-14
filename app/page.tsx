@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/kpi-card";
-import { HeroGeometricBg } from "@/components/hero-geometric-bg";
 import { HexagonMark } from "@/components/logo";
 import { DistributionPreviewChart } from "@/components/results/distribution-preview-chart";
 import { COMPANIES } from "@/lib/salary-engine";
@@ -45,9 +44,8 @@ export default function DashboardPage() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-white/[0.06] px-6 pb-16 pt-14 lg:px-10">
-        <HeroGeometricBg />
-        <div className="relative mx-auto max-w-6xl">
+      <section className="border-b border-white/[0.06] px-6 pb-16 pt-14 lg:px-10">
+        <div className="mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -65,7 +63,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight lg:text-[3.4rem]"
           >
-            Structure every salary with the
+            Structure every new-hire offer with the
             <span className="text-gradient"> precision of policy</span>, not guesswork.
           </motion.h1>
 
@@ -75,8 +73,8 @@ export default function DashboardPage() {
             transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground lg:text-lg"
           >
-            Hexagon_AG17 reads an employee&rsquo;s current compensation, classifies every
-            component like a seasoned C&amp;B consultant, and rebuilds it against the official
+            Hexagon_AG17 takes a candidate&rsquo;s current CTC, classifies every component like a
+            seasoned C&amp;B consultant, and builds their new offer against the official
             Geosystems, Metrology, and Vero salary frameworks &mdash; instantly, and to the rupee.
           </motion.p>
 
@@ -88,7 +86,7 @@ export default function DashboardPage() {
           >
             <Link href="/salary">
               <Button size="lg" className="group">
-                Start New Salary Analysis
+                Start New Hire Offer
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Button>
             </Link>
@@ -152,16 +150,16 @@ export default function DashboardPage() {
               <ol className="mt-5 space-y-5">
                 {[
                   {
-                    title: "Enter the current salary structure",
-                    body: "Every field is optional. Add, rename, or remove components freely — Basic, HRA, custom allowances, anything.",
+                    title: "Capture the candidate's current CTC",
+                    body: "Log their current CTC as disclosed, plus a full breakup if you have it. Every field is optional and freely editable.",
                   },
                   {
                     title: "Let the AI classify each component",
-                    body: "Claude reads your component names and descriptions and files each one under Basic, Allowance, Benefit, Retiral, Variable Pay, or Reimbursement.",
+                    body: "Claude reads the component names and descriptions and files each one under Basic, Allowance, Benefit, Retiral, Variable Pay, or Reimbursement.",
                   },
                   {
-                    title: "Set a Target Fixed CTC and benchmark",
-                    body: "Choose one company or compare all three — the engine rebuilds the structure using each company's exact, official compensation formulas.",
+                    title: "Set the offered Fixed CTC and benchmark",
+                    body: "Pick the hiring entity — the engine builds the new offer using that company's exact, official compensation formulas and shows the hike over their current CTC.",
                   },
                 ].map((step, i) => (
                   <li key={i} className="flex gap-4">

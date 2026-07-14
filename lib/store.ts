@@ -15,6 +15,8 @@ export interface Employee {
   designation: string;
   grade: Grade | "";
   currentCompany: string;
+  /** Candidate's current CTC per annum, as disclosed — used to compute the offer hike. */
+  currentCTC: number | null;
 }
 
 export interface AnalysisRecord {
@@ -54,6 +56,7 @@ export const useSalaryStore = create<SalaryStore>()(
         designation: "",
         grade: "",
         currentCompany: "",
+        currentCTC: null,
       },
       components: DEFAULT_COMPONENTS,
       targetCTC: null,

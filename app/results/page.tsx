@@ -36,7 +36,11 @@ export default function ResultsPage() {
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [activeCompany, setActiveCompany] = useState(selectedCompanies[0] || "geosystems");
 
-  const currentTotal = useMemo(() => totalAnnual(components), [components]);
+  // The candidate's disclosed current CTC is the authoritative figure for hike
+  // calculations; the itemized breakup (if provided) is used only for the
+  // composition charts below.
+  const itemizedTotal = useMemo(() => totalAnnual(components), [components]);
+  const currentTotal = employee.currentCTC ?? itemizedTotal;
 
   const structures = useMemo(
     () =>
@@ -66,7 +70,7 @@ export default function ResultsPage() {
   }, [components]);
 
   const chartData: CompositionBar[] = useMemo(() => {
-    const currentBar: CompositionBar = { label: "Current", ...currentBySlice };
+    const currentBar: CompositionBar = { label: "Current (breakup)", ...currentBySlice };
     const proposedBars: CompositionBar[] = structures.map((s) => ({
       label: COMPANIES[s.companyId].name.replace("Hexagon ", ""),
       basic: s.basic,
@@ -83,7 +87,7 @@ export default function ResultsPage() {
 
   const waterfallSteps: WaterfallStep[] = activeStructure
     ? [
-        { label: "Current CTC", delta: currentTotal, isTotal: true },
+        { label: "Current CTC (breakup)", delta: itemizedTotal, isTotal: true },
         { label: "Basic", delta: activeStructure.basic - currentBySlice.basic },
         { label: "HRA + Conveyance", delta: activeStructure.hra + activeStructure.conveyanceAllowance - currentBySlice.hra },
         { label: "Special Allowance", delta: activeStructure.specialAllowance - currentBySlice.specialAllowance },
@@ -153,11 +157,13 @@ export default function ResultsPage() {
               <ArrowLeft className="h-3 w-3" /> Back to structuring
             </Link>
             <h1 className="mt-2 text-2xl font-bold tracking-tight lg:text-3xl">
-              {employee.name ? `${employee.name}'s` : "Comparison"} Salary Structure Results
+              {employee.name ? `${employee.name}'s` : "Candidate"} Offer Structure
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Target Fixed CTC {formatINR(targetCTC)} · benchmarked against {selectedCompanies.length}{" "}
-              {selectedCompanies.length === 1 ? "framework" : "frameworks"}
+              Offered Fixed CTC {formatINR(targetCTC)}
+              {employee.currentCTC
+                ? ` · ${(((targetCTC - employee.currentCTC) / employee.currentCTC) * 100).toFixed(1)}% hike over current CTC of ${formatINR(employee.currentCTC)}`
+                : ""}
             </p>
           </div>
           <div className="flex gap-2">
@@ -185,15 +191,18 @@ export default function ResultsPage() {
         </div>
 
         {/* Employee / client details */}
-        {(employee.name || employee.employeeId || employee.designation || employee.grade || employee.currentCompany) && (
+        {(employee.name || employee.employeeId || employee.designation || employee.grade || employee.currentCompany || employee.currentCTC) && (
           <Card className="mb-6">
             <CardContent className="flex flex-wrap gap-x-8 gap-y-3 p-5">
-              <DetailField label="Employee" value={employee.name || "—"} />
+              <DetailField label="Candidate" value={employee.name || "—"} />
               <DetailField label="Employee ID" value={employee.employeeId || "—"} />
               <DetailField label="Designation" value={employee.designation || "—"} />
               <DetailField label="Grade" value={employee.grade || "—"} />
               <DetailField label="Current company" value={employee.currentCompany || "—"} />
-              <DetailField label="Current CTC (sum)" value={formatINR(currentTotal)} />
+              <DetailField
+                label={employee.currentCTC != null ? "Current CTC (disclosed)" : "Current CTC (breakup sum)"}
+                value={formatINR(currentTotal)}
+              />
             </CardContent>
           </Card>
         )}
@@ -212,8 +221,8 @@ export default function ResultsPage() {
           <CardContent className="p-6">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="font-semibold">CTC Bridge — Current to Proposed</h2>
-                <p className="text-xs text-muted-foreground">How each component contributes to the change in Total CTC</p>
+                <h2 className="font-semibold">CTC Bridge — Current Breakup to Offer</h2>
+                <p className="text-xs text-muted-foreground">How each component contributes to the change in Total CTC (requires a current CTC breakup)</p>
               </div>
               {selectedCompanies.length > 1 && (
                 <Tabs value={activeCompany} onValueChange={(v) => setActiveCompany(v as any)}>
