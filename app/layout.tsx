@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
 import "./globals.css";
 import { NavSidebar } from "@/components/nav-sidebar";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "Hexagon_AG17 – Salary Management Agent",
+  title: "Hexagon_AG17 – Compensation & Benefits Platform",
   description:
-    "AI-Powered Salary Structuring, Compensation Benchmarking & HR Intelligence Platform",
+    "Hexagon Geosystems internal Salary Structuring, Compensation Benchmarking & HR Intelligence Platform",
 };
 
 export default function RootLayout({
@@ -14,10 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className="font-sans antialiased">
         <NavSidebar />
-        <div className="lg:pl-[260px]">{children}</div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -211,6 +211,33 @@ export interface SalaryComponent {
   description: string;
   category?: ComponentCategory;
   isCustom?: boolean;
+  confidence?: number; // 0-100, AI classification confidence (or heuristic fallback)
+  taxability?: TaxabilityStatus;
+}
+
+export type TaxabilityStatus = "Taxable" | "Partially Exempt" | "Exempt";
+
+// Indicative mapping only — not tax advice. Real taxability depends on
+// limits, regime (old vs new tax regime), and case-specific facts that this
+// platform does not evaluate. Shown to give HR a directional flag to verify
+// with Finance/Tax, not a filing determination.
+export function heuristicTaxability(category?: ComponentCategory): TaxabilityStatus {
+  switch (category) {
+    case "Basic Salary":
+    case "Variable Pay":
+    case "Bonus":
+      return "Taxable";
+    case "Employer Contribution":
+    case "Retiral":
+      return "Exempt";
+    case "Allowance":
+    case "Benefit":
+      return "Partially Exempt";
+    case "Reimbursement":
+      return "Exempt";
+    default:
+      return "Taxable";
+  }
 }
 
 export const DEFAULT_COMPONENTS: SalaryComponent[] = [
@@ -234,42 +261,6 @@ export function normalizeComponent(comp: SalaryComponent): SalaryComponent {
 
 export function totalAnnual(components: SalaryComponent[]): number {
   return components.reduce((sum, c) => sum + (c.annual ?? 0), 0);
-}
-
-export function totalMonthly(components: SalaryComponent[]): number {
-  return components.reduce((sum, c) => sum + (c.monthly ?? (c.annual ? c.annual / 12 : 0)), 0);
-}
-
-// Fixed vs. Variable split — Variable Pay and Bonus categories are treated as
-// "at risk" / performance-linked pay; every other category is Fixed. This
-// mirrors how HR/C&B teams typically report a CTC breakup to an employee.
-const VARIABLE_CATEGORIES: ComponentCategory[] = ["Variable Pay", "Bonus"];
-
-export interface FixedVariableSplit {
-  fixedAnnual: number;
-  variableAnnual: number;
-  fixedPct: number;
-  variablePct: number;
-}
-
-export function splitFixedVariable(components: SalaryComponent[]): FixedVariableSplit {
-  let fixedAnnual = 0;
-  let variableAnnual = 0;
-  for (const c of components) {
-    const annual = c.annual ?? 0;
-    if (c.category && VARIABLE_CATEGORIES.includes(c.category)) {
-      variableAnnual += annual;
-    } else {
-      fixedAnnual += annual;
-    }
-  }
-  const total = fixedAnnual + variableAnnual;
-  return {
-    fixedAnnual,
-    variableAnnual,
-    fixedPct: total ? fixedAnnual / total : 0,
-    variablePct: total ? variableAnnual / total : 0,
-  };
 }
 
 // Local heuristic classifier used as an instant fallback / pre-fill before
@@ -362,4 +353,288 @@ export function formatINR(value: number, opts?: { compact?: boolean }): string {
 export function pctDiff(current: number, proposed: number): number {
   if (!current) return 0;
   return (proposed - current) / current;
+}
+
+// ---------------------------------------------------------------------
+// Current-structure summary used to build the results header, metric
+// comparison cards, and composition chart from freeform user-entered
+// components (matched by known id where available, else by category).
+// ---------------------------------------------------------------------
+
+export interface CurrentSummary {
+  totalAnnual: number;
+  basic: number;
+  hraAndConveyance: number;
+  specialAllowance: number;
+  employerContribution: number; // Employer PF + Gratuity (employer-borne retirals)
+  variablePay: number; // Bonus + Variable Pay categories
+  otherBenefits: number; // Benefit + Reimbursement categories
+  takeHomeMonthly: number; // (Total − Employer Contribution − Variable Pay) / 12, approx.
+}
+
+export function computeCurrentSummary(components: SalaryComponent[]): CurrentSummary {
+  const get = (id: string) => components.find((c) => c.id === id)?.annual ?? 0;
+
+  // Prefer known default ids for precision; fall back to AI/heuristic category
+  // for custom components so the summary still accounts for everything.
+  const knownIds = new Set(["basic", "hra", "shift", "medical", "lta", "special", "pf", "gratuity", "meal", "incentive"]);
+  const basic = get("basic");
+  const hraAndConveyance = get("hra") + get("shift") + get("lta");
+  const specialAllowance = get("special");
+  const employerContribution = get("pf") + get("gratuity");
+  const variablePayKnown = get("incentive");
+  const otherKnown = get("medical") + get("meal");
+
+  let variablePayExtra = 0;
+  let otherExtra = 0;
+  let employerContributionExtra = 0;
+  let unclassifiedExtra = 0;
+
+  for (const c of components) {
+    if (knownIds.has(c.id) || !(c.annual && c.annual > 0)) continue;
+    switch (c.category) {
+      case "Variable Pay":
+      case "Bonus":
+        variablePayExtra += c.annual;
+        break;
+      case "Employer Contribution":
+      case "Retiral":
+        employerContributionExtra += c.annual;
+        break;
+      case "Benefit":
+      case "Reimbursement":
+        otherExtra += c.annual;
+        break;
+      default:
+        unclassifiedExtra += c.annual; // treated as allowance-like, folded into "other"
+        otherExtra += 0; // keep explicit for clarity; counted in totalAnnual regardless
+    }
+  }
+
+  const variablePay = variablePayKnown + variablePayExtra;
+  const otherBenefits = otherKnown + otherExtra + unclassifiedExtra;
+  const employerContributionTotal = employerContribution + employerContributionExtra;
+  const totalAnnual = components.reduce((sum, c) => sum + (c.annual ?? 0), 0);
+  const takeHomeMonthly = Math.max(0, totalAnnual - employerContributionTotal - variablePay) / 12;
+
+  return {
+    totalAnnual,
+    basic,
+    hraAndConveyance,
+    specialAllowance,
+    employerContribution: employerContributionTotal,
+    variablePay,
+    otherBenefits,
+    takeHomeMonthly,
+  };
+}
+
+// ---------------------------------------------------------------------
+// Detailed line-by-line comparison table (current vs proposed), grouped
+// by target category so consolidated components read as one clear row
+// rather than duplicating the proposed figure across every source line.
+// ---------------------------------------------------------------------
+
+export interface DetailedRow {
+  label: string;
+  current: number;
+  proposed: number;
+  reason: string;
+  isNew: boolean; // proposed-only line with no current equivalent supplied
+}
+
+export function buildDetailedRows(
+  components: SalaryComponent[],
+  companyId: CompanyId,
+  structure: ProposedStructure
+): DetailedRow[] {
+  const company = COMPANIES[companyId];
+  const flexiTarget =
+    companyId === "vero" ? "Special Allowance (Flexi Allowance)" : "Special Allowance";
+  const mapped = mapComponentsToCompany(components, companyId);
+
+  const grouped = new Map<string, { current: number; reasons: Set<string> }>();
+  for (const m of mapped) {
+    const g = grouped.get(m.mappedTo) || { current: 0, reasons: new Set<string>() };
+    g.current += m.sourceAnnual;
+    if (!m.isDirectMatch) g.reasons.add(m.reason);
+    grouped.set(m.mappedTo, g);
+  }
+
+  const proposedByLabel: Record<string, number> = {
+    Basic: structure.basic,
+    HRA: structure.hra,
+    [flexiTarget]: structure.specialAllowance,
+    "Employer PF": structure.employerPF,
+    Gratuity: structure.gratuity,
+    "Meal Allowance": structure.mealAllowance,
+    "Annual Incentive": structure.annualIncentive,
+  };
+
+  const order = [
+    "Basic",
+    "HRA",
+    "Conveyance Allowance",
+    flexiTarget,
+    "Employer PF",
+    "Gratuity",
+    ...(company.hasMealAllowance ? ["Meal Allowance"] : []),
+    ...(company.hasFlexiAttire && structure.flexiAttire ? ["Flexi Attire Benefit"] : []),
+    "Annual Incentive",
+  ];
+
+  const rows: DetailedRow[] = order.map((label) => {
+    if (label === "Conveyance Allowance") {
+      return {
+        label,
+        current: 0,
+        proposed: structure.conveyanceAllowance,
+        reason: `Statutory conveyance component introduced under ${company.name}'s framework (${(company.conveyancePct * 100).toFixed(0)}% of Deemed Wages) — no equivalent was present in the current structure.`,
+        isNew: true,
+      };
+    }
+    if (label === "Flexi Attire Benefit") {
+      return {
+        label,
+        current: 0,
+        proposed: structure.flexiAttire,
+        reason: `Grade-banded flexi benefit under ${company.name}'s policy for grade ${structure.grade}.`,
+        isNew: true,
+      };
+    }
+    const g = grouped.get(label);
+    const current = g?.current ?? 0;
+    const proposed = proposedByLabel[label] ?? 0;
+    const reason =
+      g && g.reasons.size > 0
+        ? Array.from(g.reasons)[0]
+        : current > 0
+        ? "Direct equivalent identified in the official compensation structure."
+        : `Standard ${company.name} component — no current equivalent supplied.`;
+    return { label, current, proposed, reason, isNew: current === 0 };
+  });
+
+  return rows.filter((r) => r.current > 0 || r.proposed > 0);
+}
+
+// ---------------------------------------------------------------------
+// Compliance panel — deterministic, rule-based checks against the values
+// the engine itself computed. These are structural sanity checks against
+// the New Labour Code assumptions baked into the engine, not a substitute
+// for legal/statutory review — flagged items should always go to Finance/
+// Legal, and "Passed" only means the number is internally consistent with
+// the modeled rule, not that it has been independently audited.
+// ---------------------------------------------------------------------
+
+export type ComplianceStatus = "passed" | "review";
+
+export interface ComplianceCheck {
+  label: string;
+  status: ComplianceStatus;
+  detail: string;
+}
+
+export function computeComplianceChecks(
+  structure: ProposedStructure,
+  companyId: CompanyId
+): ComplianceCheck[] {
+  const company = COMPANIES[companyId];
+  const checks: ComplianceCheck[] = [];
+
+  // 1. Wage code: Basic + allowances forming "wages" must be >= 50% of total CTC
+  const wagesRatio = structure.deemedWages / structure.fixedCTC;
+  checks.push({
+    label: "Wage Code — 50% Deemed Wages Floor",
+    status: wagesRatio >= 0.499 ? "passed" : "review",
+    detail: `Deemed Wages = ${(wagesRatio * 100).toFixed(1)}% of Fixed CTC (statutory floor: 50%).`,
+  });
+
+  // 2. Basic must be at least 40% of Fixed CTC under the modeled policy
+  const basicRatio = structure.basic / structure.fixedCTC;
+  checks.push({
+    label: "Basic Wages Threshold",
+    status: basicRatio >= 0.399 ? "passed" : "review",
+    detail: `Basic = ${(basicRatio * 100).toFixed(1)}% of Fixed CTC (policy target: ${(company.basicPct * 100).toFixed(0)}%).`,
+  });
+
+  // 3. Employer PF should be 12% of Deemed Wages
+  const pfRatio = structure.deemedWages > 0 ? structure.employerPF / structure.deemedWages : 0;
+  checks.push({
+    label: "Employer PF Contribution",
+    status: Math.abs(pfRatio - company.pfPct) < 0.005 ? "passed" : "review",
+    detail: `Employer PF = ${(pfRatio * 100).toFixed(1)}% of Deemed Wages (policy: ${(company.pfPct * 100).toFixed(0)}%).`,
+  });
+
+  // 4. Gratuity computed and non-zero
+  checks.push({
+    label: "Gratuity Accrual",
+    status: structure.gratuity > 0 ? "passed" : "review",
+    detail:
+      structure.gratuity > 0
+        ? `Gratuity accrual of ${formatINR(structure.gratuity)}/year modeled per ${company.gratuityStatedRate}.`
+        : "No gratuity accrual computed — verify Fixed CTC input.",
+  });
+
+  // 5. Variable pay reasonableness — flag if incentive exceeds 30% of total CTC
+  const variableRatio = structure.annualIncentive / structure.totalCTC;
+  checks.push({
+    label: "Variable Pay Mix",
+    status: variableRatio <= 0.3 ? "passed" : "review",
+    detail: `Target incentive is ${(variableRatio * 100).toFixed(1)}% of Total CTC (policy target: ${(company.incentivePct * 100).toFixed(0)}% of Fixed CTC).`,
+  });
+
+  // 6. Internal consistency: Base Pay + Total Retiral must reconcile to Fixed CTC
+  checks.push({
+    label: "Fixed CTC Reconciliation",
+    status: Math.abs(structure.fixedCTCCheck - structure.fixedCTC) <= 1 ? "passed" : "review",
+    detail: `Base Pay + Total Retiral reconciles to ${formatINR(structure.fixedCTCCheck)} against a target of ${formatINR(structure.fixedCTC)}.`,
+  });
+
+  return checks;
+}
+
+// ---------------------------------------------------------------------
+// Offer signals — transparent, rule-based indicators (NOT a machine-learned
+// prediction and not sourced from external market data). Competitiveness is
+// purely the % change vs. the candidate's disclosed current CTC; retention
+// risk is the inverse of that same signal. Both are explained inline in the
+// UI so HR can see exactly how each label was derived.
+// ---------------------------------------------------------------------
+
+export type OfferBand = "Highly Competitive" | "Competitive" | "Moderate" | "Below Current";
+export type RetentionRisk = "Low" | "Moderate" | "High" | "Unknown";
+
+export interface OfferSignals {
+  increasePct: number | null;
+  competitiveness: OfferBand | "Unknown";
+  competitivenessScore: number | null; // 0-100, simple linear mapping for display only
+  retentionRisk: RetentionRisk;
+}
+
+export function computeOfferSignals(currentEmployerCTC: number | null, proposedTotalCTC: number): OfferSignals {
+  if (!currentEmployerCTC || currentEmployerCTC <= 0) {
+    return { increasePct: null, competitiveness: "Unknown", competitivenessScore: null, retentionRisk: "Unknown" };
+  }
+  const increasePct = (proposedTotalCTC - currentEmployerCTC) / currentEmployerCTC;
+
+  let competitiveness: OfferBand;
+  let retentionRisk: RetentionRisk;
+  if (increasePct >= 0.15) {
+    competitiveness = "Highly Competitive";
+    retentionRisk = "Low";
+  } else if (increasePct >= 0.05) {
+    competitiveness = "Competitive";
+    retentionRisk = "Low";
+  } else if (increasePct >= 0) {
+    competitiveness = "Moderate";
+    retentionRisk = "Moderate";
+  } else {
+    competitiveness = "Below Current";
+    retentionRisk = "High";
+  }
+
+  // Simple bounded linear score for display (0 at -20% or worse, 100 at +30% or better)
+  const score = Math.round(Math.min(100, Math.max(0, ((increasePct + 0.2) / 0.5) * 100)));
+
+  return { increasePct, competitiveness, competitivenessScore: score, retentionRisk };
 }

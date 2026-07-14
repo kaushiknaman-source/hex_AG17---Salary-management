@@ -1,314 +1,257 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   ArrowRight,
-  Sparkles,
-  Building2,
   Activity,
-  TrendingUp,
+  Building2,
   ShieldCheck,
-  FileSpreadsheet,
-  Wand2,
+  FileBarChart,
+  Sparkles,
+  Plus,
+  ClipboardList,
+  BookOpen,
+  CircleCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { KpiCard } from "@/components/kpi-card";
-import { HexagonMark } from "@/components/logo";
-import { DistributionPreviewChart } from "@/components/results/distribution-preview-chart";
 import { COMPANIES } from "@/lib/salary-engine";
 import { useSalaryStore } from "@/lib/store";
 
+const POLICY_TIPS = [
+  "Hexagon Geosystems models Gratuity at 8.33% of Deemed Wages — solved algebraically to a fixed 4% of Fixed CTC to remove the circular Deemed-Wages-depends-on-Gratuity reference.",
+  "Metrology and Vero both apply a 4.81% Deemed Wages gratuity rate, which resolves to 2.34852% of Fixed CTC once the same circular reference is solved.",
+  "Every framework holds Deemed Wages at 50% of Total Remuneration (Fixed CTC minus Gratuity) — the statutory wage-code floor.",
+  "Vero layers a fixed ₹4,400/month Meal Allowance on top of Fixed CTC, rather than netting it against Basic or Special Allowance.",
+];
+
 export default function DashboardPage() {
   const history = useSalaryStore((s) => s.history);
+  const todayCount = history.filter(
+    (h) => new Date(h.timestamp).toDateString() === new Date().toDateString()
+  ).length;
+  const monthCount = history.filter((h) => {
+    const d = new Date(h.timestamp);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  const tip = POLICY_TIPS[history.length % POLICY_TIPS.length];
 
   return (
     <main className="min-h-screen">
       {/* Topbar */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/[0.06] bg-[#03101f]/80 px-6 backdrop-blur-xl lg:px-10">
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur lg:px-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="text-foreground font-semibold">Command Center</span>
-          <span className="text-white/20">/</span>
-          <span>Overview</span>
+          <span className="font-semibold text-foreground">Command Center</span>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="default" className="hidden sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky" /> AI Engine Online
+          <Badge variant="sea">
+            <span className="h-1.5 w-1.5 rounded-full bg-sea" /> Engine Operational
           </Badge>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky text-xs font-bold text-[#00161F]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky text-[11px] font-bold text-[#00161F]">
             HR
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="border-b border-white/[0.06] px-6 pb-16 pt-14 lg:px-10">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-2"
-          >
-            <Badge variant="default">
-              <Sparkles className="h-3 w-3" /> Hexagon · AI-Based HR Intelligence
-            </Badge>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight lg:text-[3.4rem]"
-          >
-            Structure every new-hire offer with the
-            <span className="text-gradient"> precision of policy</span>, not guesswork.
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground lg:text-lg"
-          >
-            Hexagon_AG17 takes a candidate&rsquo;s current CTC, classifies every component like a
-            seasoned C&amp;B consultant, and builds their new offer against the official
-            Geosystems, Metrology, and Vero salary frameworks &mdash; instantly, and to the rupee.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 flex flex-wrap items-center gap-3"
-          >
-            <Link href="/salary">
-              <Button size="lg" className="group">
-                Start New Hire Offer
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Button>
-            </Link>
-            <Link href="/compare">
-              <Button size="lg" variant="outline">
-                View Company Frameworks
-              </Button>
-            </Link>
-          </motion.div>
+      <div className="px-6 py-6 lg:px-8">
+        {/* Page title row */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Compensation &amp; Benefits — Command Center</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Hexagon Geosystems internal salary structuring and framework benchmarking platform.
+            </p>
+          </div>
+          <Link href="/salary">
+            <Button>
+              <Plus className="h-4 w-4" /> New Salary Analysis
+            </Button>
+          </Link>
         </div>
-      </section>
 
-      {/* KPI Row */}
-      <section className="px-6 py-10 lg:px-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            label="Engine Status"
-            value="Live"
-            sublabel="Claude-powered classification & insights"
-            icon={Activity}
-            accent="sky"
-            delay={0}
-          />
-          <KpiCard
-            label="Frameworks Loaded"
-            value="3 / 3"
-            sublabel="Geosystems · Metrology · Vero"
-            icon={Building2}
-            accent="sky"
-            delay={0.05}
-          />
-          <KpiCard
-            label="Analyses Run"
-            value={String(history.length)}
-            sublabel="Stored in this workspace"
-            icon={TrendingUp}
-            accent="sky"
-            delay={0.1}
-          />
-          <KpiCard
-            label="Compliance Model"
-            value="New Labour Codes"
-            sublabel="Statutory gratuity & PF logic embedded"
-            icon={ShieldCheck}
-            accent="sky"
-            delay={0.15}
-          />
+        {/* Enterprise widget row */}
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Widget title="Engine Health" icon={Activity} accent="sea">
+            <Stat label="Claude API" value="Operational" positive />
+            <Stat label="Calculation Engine" value="Operational" positive />
+            <Stat label="Export Service" value="Operational" positive />
+          </Widget>
+
+          <Widget title="Framework Status" icon={Building2} accent="sky">
+            <Stat label="Frameworks Loaded" value="3 / 3" positive />
+            <Stat label="Ruleset" value="New Labour Codes" />
+            <Stat label="Engine Version" value="v1.0" />
+          </Widget>
+
+          <Widget title="Session Activity" icon={ClipboardList} accent="land">
+            <Stat label="Analyses Today" value={String(todayCount)} />
+            <Stat label="Analyses This Month" value={String(monthCount)} />
+            <Stat label="Stored In Session" value={String(history.length)} />
+          </Widget>
+
+          <Widget title="Compliance Status" icon={ShieldCheck} accent="warn">
+            <Stat label="Wage Code Floor" value="Enforced" positive />
+            <Stat label="PF / Gratuity Rules" value="Modeled" positive />
+            <Stat label="Last Reviewed" value="Framework v1.0" />
+          </Widget>
         </div>
-      </section>
 
-      {/* Main grid: Get Started + Distribution + Company Overview */}
-      <section className="px-6 pb-10 lg:px-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Get started */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Recent analyses */}
           <Card className="lg:col-span-2">
-            <CardContent className="p-7">
-              <div className="flex items-center gap-2">
-                <Wand2 className="h-4 w-4 text-sky" />
-                <h2 className="text-base font-semibold">Get started</h2>
+            <CardContent className="p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Recent Analyses</h2>
+                <Link href="/salary" className="text-xs font-medium text-sky hover:underline">
+                  New analysis
+                </Link>
               </div>
-              <ol className="mt-5 space-y-5">
-                {[
-                  {
-                    title: "Capture the candidate's current CTC",
-                    body: "The one required number — everything downstream, including the suggested hike bands, is anchored to it. A full breakup, if available, is optional.",
-                  },
-                  {
-                    title: "Let the AI classify each component",
-                    body: "Claude reads the component names and descriptions and files each one under Basic, Allowance, Benefit, Retiral, Variable Pay, or Reimbursement.",
-                  },
-                  {
-                    title: "Set the offered Fixed CTC and benchmark",
-                    body: "Pick the hiring entity — the engine builds the new offer using that company's exact, official compensation formulas and shows the hike over their current CTC.",
-                  },
-                ].map((step, i) => (
-                  <li key={i} className="flex gap-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky/10 text-sm font-bold text-sky ring-1 ring-sky/25">
-                      {i + 1}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{step.title}</p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">{step.body}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <Link href="/salary" className="mt-6 inline-block">
-                <Button variant="secondary">
-                  Open Salary Structuring <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+              {history.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                  <p className="text-sm font-medium text-foreground">No analyses in this session yet</p>
+                  <p className="text-xs text-muted-foreground">Employees you structure will be listed here for quick recall.</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <th className="py-2 font-semibold">Employee</th>
+                      <th className="py-2 font-semibold">Benchmark</th>
+                      <th className="py-2 text-right font-semibold">Target CTC</th>
+                      <th className="py-2 text-right font-semibold">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.slice(0, 8).map((h) => (
+                      <tr key={h.id} className="border-b border-border/70 last:border-0">
+                        <td className="py-2.5 font-medium text-foreground">{h.employeeName || "Unnamed employee"}</td>
+                        <td className="py-2.5 text-muted-foreground">{COMPANIES[h.company]?.name.replace("Hexagon ", "")}</td>
+                        <td className="py-2.5 text-right tabular-nums text-muted-foreground">
+                          ₹{h.targetCTC.toLocaleString("en-IN")}
+                        </td>
+                        <td className="py-2.5 text-right text-muted-foreground">
+                          {new Date(h.timestamp).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </CardContent>
           </Card>
 
-          {/* distribution preview */}
-          <Card>
-            <CardContent className="p-7">
-              <h2 className="text-base font-semibold">Typical CTC Composition</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Illustrative split under the standard 40/50 wage-code model
-              </p>
-              <DistributionPreviewChart />
-              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                {[
-                  ["Basic", "#005198"],
-                  ["HRA + Conveyance", "#01ADFF"],
-                  ["Special Allowance", "#4FC3FF"],
-                  ["Retirals", "#99D6FF"],
-                  ["Variable Pay", "#CFE9FF"],
-                ].map(([label, color]) => (
-                  <div key={label} className="flex items-center gap-1.5 text-muted-foreground">
-                    <span className="h-2 w-2 rounded-full" style={{ background: color as string }} />
-                    {label}
+          {/* AI recommendation / policy insight */}
+          <Card className="border-sky/20 bg-sky/[0.03]">
+            <CardContent className="p-5">
+              <div className="mb-2 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-sky" />
+                <h2 className="text-sm font-semibold">Framework Insight</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/85">{tip}</p>
+              <Link href="/compare" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-sky hover:underline">
+                View full framework logic <ArrowRight className="h-3 w-3" />
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Latest salary policies */}
+          <Card className="lg:col-span-2">
+            <CardContent className="p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold">Compensation Frameworks</h2>
+              </div>
+              <div className="divide-y divide-border">
+                {Object.values(COMPANIES).map((c) => (
+                  <div key={c.id} className="flex items-center justify-between py-2.5 text-sm">
+                    <div>
+                      <p className="font-medium text-foreground">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Basic {(c.basicPct * 100).toFixed(0)}% · PF {(c.pfPct * 100).toFixed(0)}% of DW · {c.gratuityStatedRate}
+                      </p>
+                    </div>
+                    <Badge variant="default">
+                      <CircleCheck className="h-3 w-3" /> Active
+                    </Badge>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </div>
-      </section>
 
-      {/* Company overview cards */}
-      <section className="px-6 pb-10 lg:px-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Compensation Framework Overview</h2>
-            <Link href="/compare" className="text-xs font-medium text-sky hover:underline">
-              Full breakdown &rarr;
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-            {Object.values(COMPANIES).map((c, i) => (
-              <motion.div
-                key={c.id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-              >
-                <Card className="h-full transition-all hover:border-sky/30">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 ring-1 ring-white/10">
-                        <HexagonMark className="h-4 w-4 text-white" />
-                      </div>
-                      <p className="font-semibold">{c.name}</p>
-                    </div>
-                    <div className="mt-4 space-y-2 text-sm">
-                      <Row label="Basic Wages" value={`${(c.basicPct * 100).toFixed(0)}% of Fixed`} />
-                      <Row label="Gratuity" value={c.gratuityStatedRate} />
-                      <Row label="Deemed Wages" value={`${(c.deemedWagesPct * 100).toFixed(0)}% of TR`} />
-                      <Row label="Employer PF" value={`${(c.pfPct * 100).toFixed(0)}% of DW`} />
-                      <Row label="Target Incentive" value={`${(c.incentivePct * 100).toFixed(0)}% of Fixed CTC`} />
-                      {c.hasMealAllowance && <Row label="Meal Allowance" value="₹4,400 / month" />}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI assistant + recent activity */}
-      <section className="px-6 pb-16 lg:px-10">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 border-l-2 border-l-sky">
-            <CardContent className="flex items-start gap-4 p-7">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky/15 ring-1 ring-sky/30">
-                <Sparkles className="h-5 w-5 text-sky" />
-              </div>
-              <div>
-                <p className="font-semibold">AI Executive Insights</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Every comparison you generate comes with a written summary explaining why each
-                  component moved and how the proposed structure compares to the current one —
-                  right on the results page.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Quick actions */}
           <Card>
-            <CardContent className="p-7">
-              <div className="flex items-center gap-2">
-                <FileSpreadsheet className="h-4 w-4 text-sky" />
-                <p className="font-semibold">Recent Analyses</p>
+            <CardContent className="p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <FileBarChart className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold">Quick Actions</h2>
               </div>
-              {history.length === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Nothing here yet — analyses you run will appear for quick recall.
-                </p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {history.slice(0, 4).map((h) => (
-                    <li key={h.id} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{h.employee.name || "Unnamed candidate"}</span>
-                      <span className="text-muted-foreground">
-                        {new Date(h.timestamp).toLocaleDateString()}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {history.length > 0 && (
-                <Link href="/history" className="mt-3 inline-block text-xs font-medium text-sky hover:underline">
-                  View all &rarr;
-                </Link>
-              )}
+              <div className="space-y-2">
+                <QuickAction href="/salary" label="Start New Salary Analysis" />
+                <QuickAction href="/results" label="Open Last Comparison" />
+                <QuickAction href="/compare" label="Review Company Frameworks" />
+              </div>
             </CardContent>
           </Card>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Widget({
+  title,
+  icon: Icon,
+  accent,
+  children,
+}: {
+  title: string;
+  icon: React.ElementType;
+  accent: "sky" | "sea" | "land" | "warn";
+  children: React.ReactNode;
+}) {
+  const accentMap = {
+    sky: "text-sky bg-sky/10",
+    sea: "text-sea bg-sea/10",
+    land: "text-land bg-land/10",
+    warn: "text-warn bg-warn/15",
+  };
   return (
-    <div className="flex items-center justify-between border-b border-white/[0.05] pb-2 last:border-0 last:pb-0">
+    <Card>
+      <CardContent className="p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-full ${accentMap[accent]}`}>
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+        </div>
+        <div className="space-y-1.5">{children}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-[13px]">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className={`font-semibold ${positive ? "text-land" : "text-foreground"}`}>{value}</span>
     </div>
+  );
+}
+
+function QuickAction({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-md border border-border px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-sky/30 hover:bg-sky/[0.03]"
+    >
+      {label}
+      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+    </Link>
   );
 }

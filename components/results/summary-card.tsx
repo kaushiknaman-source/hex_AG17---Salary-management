@@ -1,5 +1,5 @@
 "use client";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProposedStructure, formatINR, pctDiff } from "@/lib/salary-engine";
@@ -29,7 +29,7 @@ export function SummaryCard({
 
   return (
     <Card className="overflow-hidden">
-      <div className="border-b border-white/[0.06] border-l-2 border-l-sky p-5">
+      <div className="border-b border-border bg-sky/[0.04] p-5">
         <div className="flex items-center justify-between">
           <p className="font-semibold">{structure.companyName}</p>
           <Badge variant={diff >= 0 ? "land" : "danger"}>
@@ -42,7 +42,7 @@ export function SummaryCard({
       </div>
       <CardContent className="space-y-2 p-5 text-sm">
         {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between border-b border-white/[0.04] pb-1.5 last:border-0">
+          <div key={label} className="flex items-center justify-between border-b border-border pb-1.5 last:border-0">
             <span className="text-muted-foreground">{label}</span>
             <span className="font-medium">{formatINR(value)}</span>
           </div>

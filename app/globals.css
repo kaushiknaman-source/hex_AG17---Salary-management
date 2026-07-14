@@ -3,11 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: Arial, Helvetica, sans-serif;
-}
-
-* {
-  border-color: theme("colors.white/10");
+  --font-sans: "Inter", Arial, Helvetica, sans-serif;
 }
 
 html {
@@ -15,12 +11,17 @@ html {
 }
 
 body {
-  background-color: #03101f;
+  background-color: #0a1220;
+  background-image: radial-gradient(
+    ellipse 70% 40% at 50% 0%,
+    rgba(1, 173, 255, 0.08),
+    transparent
+  );
   color: #eaf2fa;
 }
 
 ::selection {
-  background: rgba(1, 173, 255, 0.35);
+  background: rgba(1, 173, 255, 0.3);
 }
 
 ::-webkit-scrollbar {
@@ -38,10 +39,9 @@ body {
   background: rgba(1, 173, 255, 0.4);
 }
 
-.glass {
-  background: rgba(10, 27, 48, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+.bg-hex-dot {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 22px 22px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -58,8 +58,22 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #005198, #01adff 60%, #99d6ff);
+  background: linear-gradient(90deg, #01adff, #04d0e6 60%, #7dfffc);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Shared dark-surface tooltip used by every chart. Stays dark regardless of
+   the page theme so hover text is always legible. */
+.chart-tooltip {
+  background: #050b14 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+}
+.chart-tooltip * {
+  color: #ffffff !important;
 }

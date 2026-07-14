@@ -18,7 +18,10 @@ const config: Config = {
         sans: ["var(--font-sans)", "Arial", "Helvetica", "sans-serif"],
       },
       colors: {
-        // Hexagon official brand palette (see Hexagon_Colours.txt)
+        // Hexagon official brand palette (see Hexagon_Colours.txt) — exact hex values,
+        // unaltered. On light surfaces, components use the "-dark" variant for text/
+        // icons per the brand guide's own hyperlink standard ("Light Mode Only: Primary
+        // Sky Dark"), and the DEFAULT/accent tones for fills, charts, and tinted chips.
         sky: {
           DEFAULT: "#01ADFF",
           dark: "#005198",
@@ -47,17 +50,19 @@ const config: Config = {
         },
         warn: "#FFC505",
         danger: "#FA4C40",
-        border: "hsl(215 30% 22%)",
-        input: "hsl(215 30% 22%)",
+        // Semantic tokens — light, minimal content surface. Sidebar / floating
+        // widgets hardcode their own dark surface independent of these tokens.
+        border: "#1E2A3E",
+        input: "#1E2A3E",
         ring: "#01ADFF",
-        background: "#03101F",
+        background: "#0A1220",
         foreground: "#EAF2FA",
         card: {
-          DEFAULT: "#0A1B30",
+          DEFAULT: "#101B2E",
           foreground: "#EAF2FA",
         },
         popover: {
-          DEFAULT: "#0A1B30",
+          DEFAULT: "#101B2E",
           foreground: "#EAF2FA",
         },
         primary: {
@@ -65,11 +70,11 @@ const config: Config = {
           foreground: "#00161F",
         },
         secondary: {
-          DEFAULT: "#122A44",
+          DEFAULT: "#16233A",
           foreground: "#EAF2FA",
         },
         muted: {
-          DEFAULT: "#122A44",
+          DEFAULT: "#16233A",
           foreground: "#8DA3BB",
         },
         accent: {
@@ -82,15 +87,16 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "1rem",
-        md: "0.75rem",
-        sm: "0.5rem",
-        xl: "1.25rem",
-        "2xl": "1.75rem",
+        lg: "12px",
+        md: "10px",
+        sm: "6px",
+        xl: "12px",
+        "2xl": "12px",
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(1,173,255,0.15), 0 8px 40px -8px rgba(1,173,255,0.35)",
-        card: "0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -20px rgba(0,0,0,0.6)",
+        xs: "0 1px 2px rgba(16,24,40,0.05)",
+        sm: "0 1px 2px rgba(16,24,40,0.06), 0 1px 1px rgba(16,24,40,0.04)",
+        card: "0 1px 2px rgba(16,24,40,0.04)",
       },
       backgroundImage: {
         "hex-grid":

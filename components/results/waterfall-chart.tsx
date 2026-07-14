@@ -26,7 +26,7 @@ export function WaterfallChart({ steps }: { steps: WaterfallStep[] }) {
   return (
     <ResponsiveContainer width="100%" height={320}>
       <BarChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
         <XAxis dataKey="label" tick={{ fill: "#8DA3BB", fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-12} textAnchor="end" height={60} />
         <YAxis
           tick={{ fill: "#8DA3BB", fontSize: 11 }}
@@ -39,23 +39,23 @@ export function WaterfallChart({ steps }: { steps: WaterfallStep[] }) {
             formatINR(props.payload.isTotal ? props.payload.value : props.payload.delta),
             props.payload.isTotal ? "Total" : "Change",
           ]}
-          cursor={{ fill: "rgba(255,255,255,0.04)" }}
           contentStyle={{
-            background: "#0A1B30",
+            background: "#0F2237",
             border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 12,
+            borderRadius: 10,
             fontSize: 12,
-            padding: "10px 14px",
+            color: "#F4F9FF",
           }}
-          labelStyle={{ color: "#EAF2FA", fontWeight: 600, marginBottom: 6 }}
-          itemStyle={{ color: "#EAF2FA" }}
+          itemStyle={{ color: "#F4F9FF" }}
+          labelStyle={{ color: "#F4F9FF", fontWeight: 600, marginBottom: 4 }}
+          cursor={{ fill: "rgba(255,255,255,0.05)" }}
         />
         <Bar dataKey="base" stackId="w" fill="transparent" />
         <Bar dataKey="value" stackId="w" radius={[6, 6, 6, 6]}>
           {data.map((d, i) => (
             <Cell
               key={i}
-              fill={d.isTotal ? "#005198" : d.delta >= 0 ? "#01ADFF" : "#FA4C40"}
+              fill={d.isTotal ? "#01ADFF" : d.delta >= 0 ? "#83C410" : "#FA4C40"}
             />
           ))}
         </Bar>

@@ -9,34 +9,46 @@ import {
   DEFAULT_COMPONENTS,
 } from "./salary-engine";
 
+export const BUSINESS_UNITS = [
+  "Geosystems",
+  "Metrology",
+  "Safety, Infrastructure & Geospatial",
+  "Manufacturing Intelligence",
+  "Autonomy & Positioning",
+  "Mining",
+] as const;
+export type BusinessUnit = (typeof BUSINESS_UNITS)[number];
+
 export interface Employee {
   name: string;
   employeeId: string;
   designation: string;
-  grade: Grade | "";
+  grade: Grade | ""; // "Hiring Grade" in the UI
   currentCompany: string;
-  /** Candidate's current CTC per annum, as disclosed — used to compute the offer hike. */
-  currentCTC: number | null;
+  currentCTC: number | null; // mandatory — candidate's current annual CTC from their existing employer
+  currentEmployer: string; // e.g. ABB, Siemens, Trimble, Leica, Bosch, Autodesk
+  experienceYears: number | null;
+  location: string;
+  businessUnit: BusinessUnit | "";
+  departmentBudgetCap: number | null; // optional, user-supplied reference point for the benchmark section
 }
 
 export interface AnalysisRecord {
   id: string;
   timestamp: number;
-  employee: Employee;
-  components: SalaryComponent[];
+  employeeName: string;
   targetCTC: number;
-  companies: CompanyId[];
-  grade: Grade | null;
+  company: CompanyId;
 }
 
 interface SalaryStore {
   employee: Employee;
   components: SalaryComponent[];
   targetCTC: number | null;
-  selectedCompanies: CompanyId[];
+  selectedCompany: CompanyId;
   grade: Grade | null;
   history: AnalysisRecord[];
-  hikePresets: number[];
+  sidebarCollapsed: boolean;
   setEmployee: (e: Partial<Employee>) => void;
   setComponents: (c: SalaryComponent[]) => void;
   updateComponent: (id: string, patch: Partial<SalaryComponent>) => void;
@@ -44,37 +56,37 @@ interface SalaryStore {
   removeComponent: (id: string) => void;
   reorderComponents: (from: number, to: number) => void;
   setTargetCTC: (v: number | null) => void;
-  setSelectedCompanies: (c: CompanyId[]) => void;
+  setSelectedCompany: (c: CompanyId) => void;
   setGrade: (g: Grade | null) => void;
   pushHistory: (r: AnalysisRecord) => void;
-  loadFromHistory: (id: string) => void;
-  removeHistory: (id: string) => void;
-  clearHistory: () => void;
-  setHikePresets: (v: number[]) => void;
+  toggleSidebar: () => void;
   reset: () => void;
 }
 
-const DEFAULT_EMPLOYEE: Employee = {
+const EMPTY_EMPLOYEE: Employee = {
   name: "",
   employeeId: "",
   designation: "",
   grade: "",
   currentCompany: "",
   currentCTC: null,
+  currentEmployer: "",
+  experienceYears: null,
+  location: "",
+  businessUnit: "",
+  departmentBudgetCap: null,
 };
-
-const DEFAULT_HIKE_PRESETS = [15, 20, 25, 30];
 
 export const useSalaryStore = create<SalaryStore>()(
   persist(
     (set, get) => ({
-      employee: DEFAULT_EMPLOYEE,
+      employee: EMPTY_EMPLOYEE,
       components: DEFAULT_COMPONENTS,
       targetCTC: null,
-      selectedCompanies: ["geosystems"],
+      selectedCompany: "geosystems",
       grade: null,
       history: [],
-      hikePresets: DEFAULT_HIKE_PRESETS,
+      sidebarCollapsed: false,
       setEmployee: (e) => set({ employee: { ...get().employee, ...e } }),
       setComponents: (c) => set({ components: c }),
       updateComponent: (id, patch) =>
@@ -93,33 +105,19 @@ export const useSalaryStore = create<SalaryStore>()(
         set({ components: arr });
       },
       setTargetCTC: (v) => set({ targetCTC: v }),
-      setSelectedCompanies: (c) => set({ selectedCompanies: c }),
+      setSelectedCompany: (c) => set({ selectedCompany: c }),
       setGrade: (g) => set({ grade: g }),
       pushHistory: (r) => set({ history: [r, ...get().history].slice(0, 20) }),
-      loadFromHistory: (id) => {
-        const record = get().history.find((h) => h.id === id);
-        if (!record) return;
-        set({
-          employee: record.employee,
-          components: record.components,
-          targetCTC: record.targetCTC,
-          selectedCompanies: record.companies,
-          grade: record.grade,
-        });
-      },
-      removeHistory: (id) =>
-        set({ history: get().history.filter((h) => h.id !== id) }),
-      clearHistory: () => set({ history: [] }),
-      setHikePresets: (v) => set({ hikePresets: v }),
+      toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
       reset: () =>
         set({
-          employee: DEFAULT_EMPLOYEE,
+          employee: EMPTY_EMPLOYEE,
           components: DEFAULT_COMPONENTS,
           targetCTC: null,
-          selectedCompanies: ["geosystems"],
+          selectedCompany: "geosystems",
           grade: null,
         }),
     }),
-    { name: "hexagon-ag17-salary-session" }
+    { name: "hexagon-ag17-salary-session-v3" }
   )
 );

@@ -1,18 +1,34 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Official Hexagon icon mark, supplied as a white PNG asset
- * (public/hexagon-icon-white.png). Rendered as an <img> so the true brand
- * geometry is used instead of a hand-drawn approximation.
+ * Reconstruction of the Hexagon folded-plane mark, rendered in white per
+ * brand requirement for dark-surface / internal application usage.
+ * Geometry: three triangular facets folding into a hexagonal silhouette,
+ * matching the proportions of the official Hexagon icon.
  */
 export function HexagonMark({ className }: { className?: string }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/hexagon-icon-white.png"
-      alt="Hexagon"
-      className={cn("h-8 w-8 object-contain", className)}
-    />
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("h-8 w-8", className)}
+    >
+      <path
+        d="M35 6 L11 32 L35 88 L35 46 L11 32"
+        stroke="currentColor"
+        strokeWidth="5.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <path
+        d="M35 46 L79 26 L79 64 L35 88 L79 64"
+        stroke="currentColor"
+        strokeWidth="5.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
@@ -25,19 +41,12 @@ export function HexagonLogo({
   wordmark?: boolean;
   markClassName?: string;
 }) {
-  if (wordmark) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src="/hexagon-logo-white.png"
-        alt="Hexagon"
-        className={cn("h-7 w-auto object-contain", className)}
-      />
-    );
-  }
   return (
     <div className={cn("flex items-center gap-2.5 text-white", className)}>
       <HexagonMark className={cn("h-7 w-7", markClassName)} />
+      {wordmark && (
+        <span className="text-lg font-bold tracking-tight">HEXAGON</span>
+      )}
     </div>
   );
 }

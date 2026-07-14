@@ -6,112 +6,144 @@ import {
   LayoutDashboard,
   Calculator,
   GitCompareArrows,
+  FileBarChart,
   Settings,
   History,
-  FileBarChart,
-  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ShieldCheck,
 } from "lucide-react";
 import { HexagonMark } from "./logo";
 import { cn } from "@/lib/utils";
 import { useSalaryStore } from "@/lib/store";
 
-const NAV = [
+const WORKSPACE_NAV = [
   { href: "/", label: "Command Center", icon: LayoutDashboard },
   { href: "/salary", label: "Salary Structuring", icon: Calculator },
   { href: "/results", label: "Comparison & Results", icon: GitCompareArrows },
+];
+
+const REFERENCE_NAV = [
   { href: "/compare", label: "Company Frameworks", icon: FileBarChart },
 ];
 
-const OPERATIONS = [
-  { href: "/history", label: "Analysis History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
+// The sidebar is an intentionally dark surface, independent of the light
+// content theme, so its text colors are hardcoded rather than pulled from
+// the light-surface semantic tokens (which would be unreadable here).
 export function NavSidebar() {
   const pathname = usePathname();
-  const historyCount = useSalaryStore((s) => s.history.length);
+  const collapsed = useSalaryStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useSalaryStore((s) => s.toggleSidebar);
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] flex-col border-r border-white/[0.06] bg-[#03101f]/95 backdrop-blur-xl lg:flex">
-      <div className="flex h-16 items-center gap-2.5 border-b border-white/[0.06] px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky/10 ring-1 ring-sky/30">
-          <HexagonMark className="h-5 w-5 text-white" />
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-white/[0.06] bg-[#0B1220] transition-[width] duration-200 lg:flex",
+        collapsed ? "w-[76px]" : "w-[260px]"
+      )}
+    >
+      <div className={cn("flex h-14 items-center gap-2.5 border-b border-white/[0.06]", collapsed ? "justify-center px-0" : "px-5")}>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/5 ring-1 ring-sky/25">
+          <HexagonMark className="h-4 w-4 text-sky" />
         </div>
-        <div className="leading-tight">
-          <p className="text-sm font-bold tracking-tight">Hexagon_AG17</p>
-          <p className="text-[11px] text-muted-foreground">Salary Management Agent</p>
-        </div>
+        {!collapsed && (
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-[13px] font-semibold tracking-tight text-white">Hexagon_AG17</p>
+            <p className="truncate text-[10.5px] text-white/40">Compensation &amp; Benefits</p>
+          </div>
+        )}
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-6">
-        {NAV.map((item) => {
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+        <NavGroup title="Workspace" collapsed={collapsed} items={WORKSPACE_NAV} pathname={pathname} />
+        <NavGroup title="Reference" collapsed={collapsed} items={REFERENCE_NAV} pathname={pathname} />
+
+        <div>
+          {!collapsed && (
+            <p className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/25">
+              Operations
+            </p>
+          )}
+          <NavStub icon={History} label="Analysis History" collapsed={collapsed} />
+          <NavStub icon={ShieldCheck} label="Compliance Log" collapsed={collapsed} />
+          <NavStub icon={Settings} label="Settings" collapsed={collapsed} />
+        </div>
+      </nav>
+
+      <div className="border-t border-white/[0.06] p-3">
+        {!collapsed && (
+          <div className="mb-2 flex items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-2">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sea" />
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-[11px] font-medium text-white">Engine Live</p>
+              <p className="truncate text-[9.5px] text-white/40">Claude-powered · Framework v1.0</p>
+            </div>
+          </div>
+        )}
+        <button
+          onClick={toggleSidebar}
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-white/[0.08] py-1.5 text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white"
+        >
+          {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function NavGroup({
+  title,
+  collapsed,
+  items,
+  pathname,
+}: {
+  title: string;
+  collapsed: boolean;
+  items: { href: string; label: string; icon: any }[];
+  pathname: string;
+}) {
+  return (
+    <div>
+      {!collapsed && (
+        <p className="px-2.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/25">{title}</p>
+      )}
+      <div className="space-y-0.5">
+        {items.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                active
-                  ? "bg-sky/10 text-sky ring-1 ring-sky/25"
-                  : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                "relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors",
+                collapsed && "justify-center",
+                active ? "bg-white/[0.06] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white"
               )}
             >
-              <Icon className={cn("h-4 w-4", active && "text-sky")} />
-              {item.label}
+              {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-full bg-sky" />}
+              <Icon className={cn("h-4 w-4 shrink-0", active && "text-sky")} />
+              {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
         })}
-
-        <div className="!mt-6 border-t border-white/[0.06] pt-6">
-          <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Operations
-          </p>
-          {OPERATIONS.map((item) => {
-            const active = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-                  active
-                    ? "bg-sky/10 text-sky ring-1 ring-sky/25"
-                    : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
-                )}
-              >
-                <Icon className={cn("h-4 w-4", active && "text-sky")} />
-                {item.label}
-                {item.href === "/history" && historyCount > 0 && (
-                  <span
-                    className={cn(
-                      "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                      active ? "bg-sky/20 text-sky" : "bg-white/10 text-muted-foreground"
-                    )}
-                  >
-                    {historyCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      <div className="border-t border-white/[0.06] p-4">
-        <div className="flex items-center gap-2 rounded-xl border border-sky/20 bg-sky/[0.06] px-3 py-2.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-sky" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-xs font-semibold text-sky">Engine Live</p>
-            <p className="text-[10px] text-muted-foreground">Claude-powered · v1.0</p>
-          </div>
-          <Sparkles className="ml-auto h-3.5 w-3.5 text-sky/60" />
-        </div>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+function NavStub({ icon: Icon, label, collapsed }: { icon: any; label: string; collapsed: boolean }) {
+  return (
+    <div
+      title={collapsed ? label : undefined}
+      className={cn(
+        "flex cursor-not-allowed items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] text-white/30",
+        collapsed && "justify-center"
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed && <span className="truncate">{label}</span>}
+    </div>
   );
 }

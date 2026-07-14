@@ -25,8 +25,8 @@ export default function ComparePage() {
               <Card className="h-full">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 ring-1 ring-white/10">
-                      <HexagonMark className="h-4 w-4 text-white" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky/10 ring-1 ring-sky/20">
+                      <HexagonMark className="h-4 w-4 text-sky" />
                     </div>
                     <div>
                       <p className="font-semibold">{c.name}</p>
@@ -50,13 +50,13 @@ export default function ComparePage() {
                   </ol>
 
                   {c.hasFlexiAttire && (
-                    <div className="mt-5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+                    <div className="mt-5 rounded-xl border border-border bg-muted/40 p-4">
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         Flexi Attire Benefit (by grade, annual)
                       </p>
                       <div className="grid grid-cols-4 gap-2 text-center text-xs">
                         {GRADES.map((g) => (
-                          <div key={g} className="rounded-lg bg-white/[0.03] p-2">
+                          <div key={g} className="rounded-lg bg-white/[0.03] p-2 border border-border">
                             <p className="font-semibold text-sky">{g}</p>
                             <p className="text-muted-foreground">
                               ₹{FLEXI_ATTIRE_ANNUAL[g].toLocaleString("en-IN")}
@@ -75,7 +75,7 @@ export default function ComparePage() {
         <Card className="mt-8">
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <Badge variant="neutral">Note</Badge>
+              <Badge variant="warn">Note</Badge>
               <p className="text-sm font-semibold">On the gratuity constant</p>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
