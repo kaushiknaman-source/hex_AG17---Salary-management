@@ -22,9 +22,11 @@ export interface Employee {
 export interface AnalysisRecord {
   id: string;
   timestamp: number;
-  employeeName: string;
+  employee: Employee;
+  components: SalaryComponent[];
   targetCTC: number;
   companies: CompanyId[];
+  grade: Grade | null;
 }
 
 interface SalaryStore {
@@ -34,6 +36,7 @@ interface SalaryStore {
   selectedCompanies: CompanyId[];
   grade: Grade | null;
   history: AnalysisRecord[];
+  hikePresets: number[];
   setEmployee: (e: Partial<Employee>) => void;
   setComponents: (c: SalaryComponent[]) => void;
   updateComponent: (id: string, patch: Partial<SalaryComponent>) => void;
@@ -44,25 +47,34 @@ interface SalaryStore {
   setSelectedCompanies: (c: CompanyId[]) => void;
   setGrade: (g: Grade | null) => void;
   pushHistory: (r: AnalysisRecord) => void;
+  loadFromHistory: (id: string) => void;
+  removeHistory: (id: string) => void;
+  clearHistory: () => void;
+  setHikePresets: (v: number[]) => void;
   reset: () => void;
 }
+
+const DEFAULT_EMPLOYEE: Employee = {
+  name: "",
+  employeeId: "",
+  designation: "",
+  grade: "",
+  currentCompany: "",
+  currentCTC: null,
+};
+
+const DEFAULT_HIKE_PRESETS = [15, 20, 25, 30];
 
 export const useSalaryStore = create<SalaryStore>()(
   persist(
     (set, get) => ({
-      employee: {
-        name: "",
-        employeeId: "",
-        designation: "",
-        grade: "",
-        currentCompany: "",
-        currentCTC: null,
-      },
+      employee: DEFAULT_EMPLOYEE,
       components: DEFAULT_COMPONENTS,
       targetCTC: null,
       selectedCompanies: ["geosystems"],
       grade: null,
       history: [],
+      hikePresets: DEFAULT_HIKE_PRESETS,
       setEmployee: (e) => set({ employee: { ...get().employee, ...e } }),
       setComponents: (c) => set({ components: c }),
       updateComponent: (id, patch) =>
@@ -84,8 +96,24 @@ export const useSalaryStore = create<SalaryStore>()(
       setSelectedCompanies: (c) => set({ selectedCompanies: c }),
       setGrade: (g) => set({ grade: g }),
       pushHistory: (r) => set({ history: [r, ...get().history].slice(0, 20) }),
+      loadFromHistory: (id) => {
+        const record = get().history.find((h) => h.id === id);
+        if (!record) return;
+        set({
+          employee: record.employee,
+          components: record.components,
+          targetCTC: record.targetCTC,
+          selectedCompanies: record.companies,
+          grade: record.grade,
+        });
+      },
+      removeHistory: (id) =>
+        set({ history: get().history.filter((h) => h.id !== id) }),
+      clearHistory: () => set({ history: [] }),
+      setHikePresets: (v) => set({ hikePresets: v }),
       reset: () =>
         set({
+          employee: DEFAULT_EMPLOYEE,
           components: DEFAULT_COMPONENTS,
           targetCTC: null,
           selectedCompanies: ["geosystems"],

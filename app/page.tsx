@@ -283,13 +283,18 @@ export default function DashboardPage() {
                 <ul className="mt-3 space-y-2">
                   {history.slice(0, 4).map((h) => (
                     <li key={h.id} className="flex items-center justify-between text-sm">
-                      <span className="text-foreground">{h.employeeName || "Unnamed employee"}</span>
+                      <span className="text-foreground">{h.employee.name || "Unnamed candidate"}</span>
                       <span className="text-muted-foreground">
                         {new Date(h.timestamp).toLocaleDateString()}
                       </span>
                     </li>
                   ))}
                 </ul>
+              )}
+              {history.length > 0 && (
+                <Link href="/history" className="mt-3 inline-block text-xs font-medium text-sky hover:underline">
+                  View all &rarr;
+                </Link>
               )}
             </CardContent>
           </Card>

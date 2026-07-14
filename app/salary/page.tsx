@@ -45,6 +45,7 @@ export default function SalaryPage() {
     grade,
     setGrade,
     pushHistory,
+    hikePresets,
   } = useSalaryStore();
 
   const [step, setStep] = useState(0);
@@ -108,9 +109,11 @@ export default function SalaryPage() {
     pushHistory({
       id: `analysis-${Date.now()}`,
       timestamp: Date.now(),
-      employeeName: employee.name,
+      employee,
+      components,
       targetCTC: targetCTC || 0,
       companies: selectedCompanies,
+      grade,
     });
     router.push("/results");
   };
@@ -404,7 +407,7 @@ export default function SalaryPage() {
                     />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {[15, 20, 25, 30].map((hikePct) => {
+                    {hikePresets.map((hikePct) => {
                       const suggested = employee.currentCTC
                         ? Math.round((employee.currentCTC * (1 + hikePct / 100)) / 1000) * 1000
                         : null;

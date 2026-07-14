@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { HexagonMark } from "./logo";
 import { cn } from "@/lib/utils";
+import { useSalaryStore } from "@/lib/store";
 
 const NAV = [
   { href: "/", label: "Command Center", icon: LayoutDashboard },
@@ -21,8 +22,14 @@ const NAV = [
   { href: "/compare", label: "Company Frameworks", icon: FileBarChart },
 ];
 
+const OPERATIONS = [
+  { href: "/history", label: "Analysis History", icon: History },
+  { href: "/settings", label: "Settings", icon: Settings },
+];
+
 export function NavSidebar() {
   const pathname = usePathname();
+  const historyCount = useSalaryStore((s) => s.history.length);
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] flex-col border-r border-white/[0.06] bg-[#03101f]/95 backdrop-blur-xl lg:flex">
       <div className="flex h-16 items-center gap-2.5 border-b border-white/[0.06] px-6">
@@ -60,12 +67,35 @@ export function NavSidebar() {
           <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Operations
           </p>
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground/60">
-            <History className="h-4 w-4" /> Analysis History
-          </div>
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground/60">
-            <Settings className="h-4 w-4" /> Settings
-          </div>
+          {OPERATIONS.map((item) => {
+            const active = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+                  active
+                    ? "bg-sky/10 text-sky ring-1 ring-sky/25"
+                    : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                )}
+              >
+                <Icon className={cn("h-4 w-4", active && "text-sky")} />
+                {item.label}
+                {item.href === "/history" && historyCount > 0 && (
+                  <span
+                    className={cn(
+                      "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                      active ? "bg-sky/20 text-sky" : "bg-white/10 text-muted-foreground"
+                    )}
+                  >
+                    {historyCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </nav>
 
