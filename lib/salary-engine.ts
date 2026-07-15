@@ -638,3 +638,117 @@ export function computeOfferSignals(currentEmployerCTC: number | null, proposedT
 
   return { increasePct, competitiveness, competitivenessScore: score, retentionRisk };
 }
+
+// ---------------------------------------------------------------------
+// Special Compensation — one-off / discretionary items filed alongside an
+// employee's structured salary (joining bonus, relocation, retention bond,
+// etc). Each item can optionally be folded into the CTC figure shown to the
+// candidate via `includeInCTC`. "Retention Bond" items model a service
+// commitment: an annual amount paid over a fixed number of years, which is
+// recoverable from the employee — on a pro-rata basis — if they exit before
+// completing the commitment period.
+// ---------------------------------------------------------------------
+
+export type CompensationItemType = "one-time" | "retention-bond" | "other";
+
+export const COMPENSATION_TYPE_LABELS: Record<CompensationItemType, string> = {
+  "one-time": "One-Time Bonus",
+  "retention-bond": "Retention Bond (Clawback)",
+  other: "Other",
+};
+
+export interface CompensationItem {
+  id: string;
+  name: string;
+  type: CompensationItemType;
+  includeInCTC: boolean;
+  notes?: string;
+  // "one-time" / "other" — a single lump-sum amount
+  amount?: number | null;
+  // "retention-bond" — paid annually over a fixed commitment period
+  annualAmount?: number | null;
+  commitmentYears?: number | null;
+}
+
+export function createCompensationItem(type: CompensationItemType = "one-time"): CompensationItem {
+  return {
+    id: `comp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: "",
+    type,
+    includeInCTC: false,
+    notes: "",
+    amount: null,
+    annualAmount: null,
+    commitmentYears: null,
+  };
+}
+
+/** The figure this item contributes to an *annual* CTC number. */
+export function compensationItemAnnualValue(item: CompensationItem): number {
+  if (item.type === "retention-bond") return item.annualAmount ?? 0;
+  return item.amount ?? 0;
+}
+
+/** Total commitment value of a retention bond (annualAmount * commitmentYears). */
+export function retentionBondTotal(item: CompensationItem): number {
+  if (item.type !== "retention-bond") return 0;
+  return (item.annualAmount ?? 0) * (item.commitmentYears ?? 0);
+}
+
+export interface CompensationTotals {
+  totalAll: number; // annualized value of every item, regardless of CTC inclusion
+  totalInCTC: number; // annualized value of items marked "include in CTC"
+  totalOutsideCTC: number;
+  totalRetentionCommitment: number; // full multi-year value of all retention bonds
+}
+
+export function computeCompensationTotals(items: CompensationItem[]): CompensationTotals {
+  let totalInCTC = 0;
+  let totalOutsideCTC = 0;
+  let totalRetentionCommitment = 0;
+  for (const item of items) {
+    const v = compensationItemAnnualValue(item);
+    if (item.includeInCTC) totalInCTC += v;
+    else totalOutsideCTC += v;
+    totalRetentionCommitment += retentionBondTotal(item);
+  }
+  return {
+    totalInCTC,
+    totalOutsideCTC,
+    totalAll: totalInCTC + totalOutsideCTC,
+    totalRetentionCommitment,
+  };
+}
+
+export interface RetentionBondYear {
+  year: number; // 1-indexed year of the commitment
+  paidThisYear: number;
+  cumulativePaid: number;
+  recoverableIfExitAfterThisYear: number; // pro-rata clawback if they leave right after completing this year
+}
+
+/**
+ * Builds a year-by-year payout / clawback schedule for a retention bond.
+ * Recovery model: if the employee exits after completing Y of N committed
+ * years, Hexagon can recover the amount paid so far, prorated by the
+ * fraction of the commitment left unserved: paidSoFar * (N - Y) / N.
+ */
+export function retentionBondSchedule(item: CompensationItem): RetentionBondYear[] {
+  if (item.type !== "retention-bond") return [];
+  const annual = item.annualAmount ?? 0;
+  const years = item.commitmentYears ?? 0;
+  if (annual <= 0 || years <= 0) return [];
+  const schedule: RetentionBondYear[] = [];
+  let cumulative = 0;
+  for (let y = 1; y <= years; y++) {
+    cumulative += annual;
+    const remainingFraction = (years - y) / years;
+    schedule.push({
+      year: y,
+      paidThisYear: annual,
+      cumulativePaid: cumulative,
+      recoverableIfExitAfterThisYear: Math.round(cumulative * remainingFraction),
+    });
+  }
+  return schedule;
+}

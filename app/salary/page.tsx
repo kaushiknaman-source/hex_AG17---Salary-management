@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SalaryComponentRow } from "@/components/salary-component-row";
+import { CompensationItemRow } from "@/components/compensation-item-row";
 import { WorkflowTimeline, WorkflowStage } from "@/components/workflow-timeline";
 import { useSalaryStore } from "@/lib/store";
 import { BUSINESS_UNITS } from "@/lib/store";
@@ -19,6 +20,8 @@ import {
   GRADES,
   totalAnnual,
   formatINR,
+  createCompensationItem,
+  computeCompensationTotals,
 } from "@/lib/salary-engine";
 
 const STAGE_LABELS = [
@@ -26,7 +29,7 @@ const STAGE_LABELS = [
   "Current Compensation",
   "AI Classification",
   "Framework Comparison",
-  "Recommendation",
+  "Special Compensation",
   "Export",
 ];
 
@@ -46,7 +49,10 @@ export default function SalaryPage() {
     selectedCompany,
     setSelectedCompany,
     setGrade,
-    pushHistory,
+    compensationItems,
+    addCompensationItem,
+    updateCompensationItem,
+    removeCompensationItem,
   } = useSalaryStore();
 
   const [step, setStep] = useState(0);
@@ -54,6 +60,7 @@ export default function SalaryPage() {
   const [classified, setClassified] = useState(false);
 
   const total = totalAnnual(components);
+  const compTotals = computeCompensationTotals(compensationItems);
   const employeeInfoComplete = !!employee.currentCTC && employee.currentCTC > 0;
 
   const stages: WorkflowStage[] = STAGE_LABELS.map((label, i) => ({
@@ -112,14 +119,11 @@ export default function SalaryPage() {
     });
   };
 
+  const handleAddCompensationItem = () => {
+    addCompensationItem(createCompensationItem());
+  };
+
   const handleGenerate = () => {
-    pushHistory({
-      id: `analysis-${Date.now()}`,
-      timestamp: Date.now(),
-      employeeName: employee.name,
-      targetCTC: targetCTC || 0,
-      company: selectedCompany,
-    });
     router.push("/results");
   };
 
@@ -432,6 +436,61 @@ export default function SalaryPage() {
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(2)}>
+                <ArrowLeft className="h-4 w-4" /> Back
+              </Button>
+              <Button size="lg" onClick={() => setStep(4)} disabled={!targetCTC || !selectedCompany}>
+                Continue to Special Compensation <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-5">
+            <SectionHeader
+              title="Special Compensation"
+              description="One-off or discretionary items paid by Hexagon on top of the structured salary — joining bonus, relocation, retention bond, etc. Choose whether each item counts toward the candidate's headline CTC."
+            />
+            <Card>
+              <CardContent className="p-0">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-6 py-4">
+                  <p className="text-sm font-semibold">Compensation items</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="sea">Included in CTC: {formatINR(compTotals.totalInCTC)}</Badge>
+                    <Badge variant="neutral">Outside CTC: {formatINR(compTotals.totalOutsideCTC)}</Badge>
+                  </div>
+                </div>
+
+                {compensationItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                    <p className="text-sm font-medium text-foreground">No special compensation items added</p>
+                    <p className="max-w-sm text-xs text-muted-foreground">
+                      Add a joining bonus, relocation support, or a retention bond with a service commitment.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 p-4">
+                    {compensationItems.map((item) => (
+                      <CompensationItemRow
+                        key={item.id}
+                        item={item}
+                        onChange={(patch) => updateCompensationItem(item.id, patch)}
+                        onRemove={() => removeCompensationItem(item.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="p-3 pt-0">
+                  <Button variant="outline" onClick={handleAddCompensationItem}>
+                    <Plus className="h-4 w-4" /> Add Compensation Item
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setStep(3)}>
                 <ArrowLeft className="h-4 w-4" /> Back
               </Button>
               <Button size="lg" onClick={handleGenerate} disabled={!targetCTC || !selectedCompany}>

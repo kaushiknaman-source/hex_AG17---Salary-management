@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 import { COMPANIES } from "@/lib/salary-engine";
 import { useSalaryStore } from "@/lib/store";
 
@@ -27,7 +28,9 @@ const POLICY_TIPS = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const history = useSalaryStore((s) => s.history);
+  const loadAnalysis = useSalaryStore((s) => s.loadAnalysis);
   const todayCount = history.filter(
     (h) => new Date(h.timestamp).toDateString() === new Date().toDateString()
   ).length;
@@ -104,32 +107,44 @@ export default function DashboardPage() {
             <CardContent className="p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Recent Analyses</h2>
-                <Link href="/salary" className="text-xs font-medium text-sky hover:underline">
-                  New analysis
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link href="/history" className="text-xs font-medium text-sky hover:underline">
+                    View all &amp; search
+                  </Link>
+                  <Link href="/salary" className="text-xs font-medium text-sky hover:underline">
+                    New analysis
+                  </Link>
+                </div>
               </div>
               {history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-                  <p className="text-sm font-medium text-foreground">No analyses in this session yet</p>
-                  <p className="text-xs text-muted-foreground">Employees you structure will be listed here for quick recall.</p>
+                  <p className="text-sm font-medium text-foreground">No analyses saved yet</p>
+                  <p className="text-xs text-muted-foreground">Save a comparison from the Results page to see it here.</p>
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted-foreground">
-                      <th className="py-2 font-semibold">Employee</th>
+                      <th className="py-2 font-semibold">Position — Experience</th>
                       <th className="py-2 font-semibold">Benchmark</th>
-                      <th className="py-2 text-right font-semibold">Target CTC</th>
+                      <th className="py-2 text-right font-semibold">Total CTC</th>
                       <th className="py-2 text-right font-semibold">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.slice(0, 8).map((h) => (
-                      <tr key={h.id} className="border-b border-border/70 last:border-0">
-                        <td className="py-2.5 font-medium text-foreground">{h.employeeName || "Unnamed employee"}</td>
+                      <tr
+                        key={h.id}
+                        className="cursor-pointer border-b border-border/70 last:border-0 hover:bg-muted/30"
+                        onClick={() => {
+                          loadAnalysis(h.id);
+                          router.push("/results");
+                        }}
+                      >
+                        <td className="py-2.5 font-medium text-foreground">{h.label}</td>
                         <td className="py-2.5 text-muted-foreground">{COMPANIES[h.company]?.name.replace("Hexagon ", "")}</td>
                         <td className="py-2.5 text-right tabular-nums text-muted-foreground">
-                          ₹{h.targetCTC.toLocaleString("en-IN")}
+                          ₹{h.totalCTC.toLocaleString("en-IN")}
                         </td>
                         <td className="py-2.5 text-right text-muted-foreground">
                           {new Date(h.timestamp).toLocaleDateString()}

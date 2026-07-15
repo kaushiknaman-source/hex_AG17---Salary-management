@@ -21,6 +21,7 @@ const WORKSPACE_NAV = [
   { href: "/", label: "Command Center", icon: LayoutDashboard },
   { href: "/salary", label: "Salary Structuring", icon: Calculator },
   { href: "/results", label: "Comparison & Results", icon: GitCompareArrows },
+  { href: "/history", label: "Analysis History", icon: History },
 ];
 
 const REFERENCE_NAV = [
@@ -64,7 +65,6 @@ export function NavSidebar() {
               Operations
             </p>
           )}
-          <NavStub icon={History} label="Analysis History" collapsed={collapsed} />
           <NavStub icon={ShieldCheck} label="Compliance Log" collapsed={collapsed} />
           <NavStub icon={Settings} label="Settings" collapsed={collapsed} />
         </div>
